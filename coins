@@ -1,0 +1,103 @@
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.Scanner;
+import org.json.JSONObject;
+
+public class Principal {
+
+    private static final String API_KEY = "5333dd89b13919ad75f24f0b";
+    private static final String BASE_URL = "https://v6.exchangerate-api.com/v6/" + API_KEY + "/latest/";
+
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+
+        System.out.println("**************************************");
+        System.out.println("Seja bem-vindo/a ao Conversor de Moedas XD");
+
+        System.out.println("1) Dólar => Peso Argentino");
+        System.out.println("2) Peso Argentino => Dólar");
+        System.out.println("3) Dólar => Real Brasileiro");
+        System.out.println("4) Real Brasileiro => Dólar");
+        System.out.println("5) Dólar => Peso Colombiano");
+        System.out.println("6) Peso Colombiano => Dólar");
+        System.out.println("7) Sair");
+        System.out.println("Escolha uma opção válida:");
+        System.out.println("**************************************");
+
+        int opcao = scanner.nextInt();
+        double valor;
+
+        try {
+            switch (opcao) {
+                case 1:
+                    System.out.println("Digite o valor em Dólares:");
+                    valor = scanner.nextDouble();
+                    System.out.println("Valor em Peso Argentino: " + converterMoeda("USD", "ARS", valor));
+                    break;
+                case 2:
+                    System.out.println("Digite o valor em Pesos Argentinos:");
+                    valor = scanner.nextDouble();
+                    System.out.println("Valor em Dólar: " + converterMoeda("ARS", "USD", valor));
+                    break;
+                case 3:
+                    System.out.println("Digite o valor em Dólares:");
+                    valor = scanner.nextDouble();
+                    System.out.println("Valor em Real Brasileiro: " + converterMoeda("USD", "BRL", valor));
+                    break;
+                case 4:
+                    System.out.println("Digite o valor em Reais:");
+                    valor = scanner.nextDouble();
+                    System.out.println("Valor em Dólar: " + converterMoeda("BRL", "USD", valor));
+                    break;
+                case 5:
+                    System.out.println("Digite o valor em Dólares:");
+                    valor = scanner.nextDouble();
+                    System.out.println("Valor em Peso Colombiano: " + converterMoeda("USD", "COP", valor));
+                    break;
+                case 6:
+                    System.out.println("Digite o valor em Pesos Colombianos:");
+                    valor = scanner.nextDouble();
+                    System.out.println("Valor em Dólar: " + converterMoeda("COP", "USD", valor));
+                    break;
+                case 7:
+                    System.out.println("Saindo...");
+                    break;
+                default:
+                    System.out.println("Opção inválida. Tente novamente.");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        scanner.close();
+    }
+
+    public static double converterMoeda(String from, String to, double valor) throws Exception {
+        String urlString = BASE_URL + from;
+        URL url = new URL(urlString);
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("GET");
+        conn.connect();
+
+        int responseCode = conn.getResponseCode();
+        if (responseCode != 200) {
+            throw new RuntimeException("HttpResponseCode: " + responseCode);
+        } else {
+            BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+            StringBuilder jsonString = new StringBuilder();
+            String inputLine;
+
+            while ((inputLine = in.readLine()) != null) {
+                jsonString.append(inputLine);
+            }
+            in.close();
+
+            JSONObject json = new JSONObject(jsonString.toString());
+            double taxaCambio = json.getJSONObject("conversion_rates").getDouble(to);
+
+            return valor * taxaCambio;
+        }
+    }
+}
